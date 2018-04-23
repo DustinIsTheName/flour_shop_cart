@@ -4,14 +4,16 @@ class OrderController < ApplicationController
 	before_filter :set_headers
 
 	def get_info
+		puts Colorize.magenta(params)
 
+		render json: params
 	end
 
 	def save_order
 		verified = verify_webhook(request.body.read, request.headers["HTTP_X_SHOPIFY_HMAC_SHA256"])
 
 		if verified
-			
+			puts Colorize.magenta(params)
 		end
 
 		head :ok, content_type: "text/html"
