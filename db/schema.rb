@@ -11,14 +11,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180423200948) do
+ActiveRecord::Schema.define(version: 20180423214745) do
 
   create_table "orders", force: :cascade do |t|
-    t.integer  "shopify_id"
+    t.integer  "shopify_id",     limit: 8
     t.string   "email"
     t.integer  "pickup_date_id"
-    t.datetime "created_at",     null: false
-    t.datetime "updated_at",     null: false
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
   end
 
   create_table "pickup_dates", force: :cascade do |t|
