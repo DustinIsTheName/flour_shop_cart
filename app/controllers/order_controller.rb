@@ -46,6 +46,8 @@ class OrderController < ApplicationController
 						puts Colorize.cyan('found PickupDate')
 					end
 
+					puts Colorize.cyan('after PickupDate')
+
 					order = Order.new
 					order.shopify_id = params['id']
 					order.email = params['email']
@@ -55,6 +57,8 @@ class OrderController < ApplicationController
 					order.customer_name = params["customer"]["first_name"]
 		    	order.pickup_date_id = pickup_date.id
 
+		    	puts Colorize.cyan('after order settings')
+
 		    	order_is_over_capacity = params["note_attributes"]&.select{|a| a["name"] == 'over-capacity'}
 
 		    	unless order_is_over_capacity.nil? || order_is_over_capacity.count == 0
@@ -63,6 +67,8 @@ class OrderController < ApplicationController
 		    		end
 		    	end
 
+		    	puts Colorize.cyan('after order send email')
+
 		    	puts Colorize.magenta(order)
 
 			    if order.save
@@ -70,6 +76,8 @@ class OrderController < ApplicationController
 			    else
 						puts Colorize.cyan('error occurred saving Order')
 			    end
+
+			    puts Colorize.cyan('after save')
 
 				else
 					puts Colorize.cyan('irrelevant order')
