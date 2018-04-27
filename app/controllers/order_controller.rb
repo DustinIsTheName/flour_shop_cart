@@ -19,11 +19,15 @@ class OrderController < ApplicationController
 		verified = verify_webhook(request.body.read, request.headers["HTTP_X_SHOPIFY_HMAC_SHA256"])
 
 		if verified
-			# puts Colorize.magenta(params)
+			puts Colorize.magenta(params)
 			order = Order.find_by_shopify_id(params['id'])
 
 			if order
 				puts Colorize.green('found')
+
+				if params["financial_status"] == 'paid' and order.send_email
+					puts Colorize.green('send Email')
+				end
 			else
 				order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Date'}
 
@@ -42,7 +46,19 @@ class OrderController < ApplicationController
 					order = Order.new
 					order.shopify_id = params['id']
 					order.email = params['email']
+					order.customer_name = params["customer"]["first_name"]
+					order.number = params["name"]
+					order.order_status_url = params["order_status_url"]
+					order.customer_name = params["customer"]["first_name"]
 		    	order.pickup_date_id = pickup_date.id
+
+		    	order_is_over_capacity = params["note_attributes"]&.select{|a| a["name"] == 'over-capacity'}
+
+		    	unless order_is_over_capacity.nil? || order_is_over_capacity.count == 0
+		    		if order_is_over_capacity.first["value"] == "true"
+		    			order.send_email = true
+		    		end
+		    	end
 
 			    if order.save
 						puts Colorize.green('saved Order')
