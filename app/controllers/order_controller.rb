@@ -19,7 +19,7 @@ class OrderController < ApplicationController
 		verified = verify_webhook(request.body.read, request.headers["HTTP_X_SHOPIFY_HMAC_SHA256"])
 
 		if verified
-			puts Colorize.magenta(params)
+			# puts Colorize.magenta(params)
 			order = Order.find_by_shopify_id(params['id'])
 
 			if order
@@ -62,6 +62,8 @@ class OrderController < ApplicationController
 		    			order.send_email = true
 		    		end
 		    	end
+
+		    	puts Colorize.magenta(order)
 
 			    if order.save
 						puts Colorize.green('saved Order')
