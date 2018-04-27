@@ -8,6 +8,7 @@ Bundler.require(*Rails.groups)
 
 module FlourShopCart
   class Application < Rails::Application
+    require 'functions/string'
     config.autoload_paths += %W(#{config.root}/lib)
     config.autoload_paths += %W(#{config.root}/lib/functions)
     # Settings in config/environments/* take precedence over those specified here.
