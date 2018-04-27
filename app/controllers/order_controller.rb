@@ -27,6 +27,9 @@ class OrderController < ApplicationController
 
 				if params["financial_status"] == 'paid' and order.send_email
 					puts Colorize.green('send Email')
+					order.send_email = false
+					order.save
+					OrderMailer.order_accepted(order).deliver
 				end
 			else
 				order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Date'}

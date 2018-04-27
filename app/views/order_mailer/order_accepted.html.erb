@@ -1,4 +1,4 @@
-    <table class="body">
+    <table class="body" style="width: 560px;text-align: left;border-spacing: 0;border-collapse: collapse;margin: 0 auto;">
       <tr>
         <td>
           <table class="header row">
@@ -10,21 +10,17 @@
           <tr>
             <td>
 
-              <table class="row">
+              <table class="row" style="width: 560px;text-align: left;border-spacing: 0;border-collapse: collapse;margin: 0 auto;">
                 <tr>
                   <td class="shop-name__cell">
-                    {%- if shop.email_logo_url %}
-                      <img src="{{shop.email_logo_url}}" alt="{{ shop.name }}" width="{{ shop.email_logo_width }}">
-                    {%- else %}
                       <h1 class="shop-name__text">
-                        <a href="{{shop.url}}">{{ shop.name }}</a>
+                        <a href="https://flour-shop.myshopify.com" style="font-size: 30px;color: #333;text-decoration: none;">Flour Shop</a>
                       </h1>
-                    {%- endif %}
                   </td>
 
-                    <td class="order-number__cell">
-                      <span class="order-number__text">
-                        Order {{ order_name }}
+                    <td class="order-number__cell" style="text-align: right;">
+                      <span class="order-number__text" style="font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Oxygen','Ubuntu','Cantarell','Fira Sans','Droid Sans','Helvetica Neue',sans-serif;text-transform: uppercase;font-size: 16px;color: #999;">
+                        Order <%= @order.number %>
                       </span>
                     </td>
                 </tr>
@@ -47,44 +43,32 @@
           <tr>
             <td>
               
-            <h2>Woohoo, your order has been accepted! We will see you soon for pickup. Sprinkles and Smiles :)</h2>
-            {% if order_status_url %}
-              <table class="row actions">
-  <tr>
-    <td class="actions__cell">
-      <table class="button main-action-cell">
-        <tr>
-          <td class="button__cell"><a href="{{ order_status_url }}" class="button__text">View your order</a></td>
-        </tr>
-      </table>
-      {% if shop.url %}
-    <table class="link secondary-action-cell">
-      <tr>
-        <td class="link__cell"><a href="{{ shop.url }}" class="link__text"><span class='or'>or</span> Visit our store</a></td>
-      </tr>
-    </table>
-{% endif %}
+            <h2 style="font-weight: normal;font-size: 24px;margin: 0 0 10px;">Woohoo, your order has been accepted! We will see you soon for pickup. Sprinkles and Smiles :)</h2>
+            <% if @order.order_status_url %>
+            <table class="row actions">
+						  <tr>
+						    <td class="actions__cell">
+						      <table class="button main-action-cell" style="border-spacing: 0;border-collapse: collapse;float: left;margin-right: 15px;">
+						        <tr>
+						          <td class="button__cell">
+						          	<a href="<%= @order.order_status_url %>" class="button__text" style="font-size: 16px;text-decoration: none;display: block;color: #fff;padding: 20px 25px;background: rgb(25, 144, 198);border-radius: 4px;">View your order</a>
+						          </td>
+						        </tr>
+						      </table>
+						    <table class="link secondary-action-cell" style="border-spacing: 0;border-collapse: collapse;margin-top: 19px;">
+						      <tr>
+						        <td class="link__cell">
+						        	<a href="https://flour-shop.myshopify.com" class="link__text" style="font-size: 16px;text-decoration: none;color: #1990c6;">
+						        		<span class='or' style="font-size: 16px;color: #999;display: inline-block;margin-right: 10px;">or</span> Visit our store
+						        	</a>
+						        </td>
+						      </tr>
+						    </table>
 
-    </td>
-  </tr>
-</table>
-
-            {% else %}
-              {% if shop.url %}
-    <table class="row actions">
-      <tr>
-        <td class="actions__cell">
-          <table class="button main-action-cell">
-            <tr>
-              <td class="button__cell"><a href="{{ shop.url }}" class="button__text">Visit our store</a></td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-{% endif %}
-
-            {% endif %}
+						    </td>
+						  </tr>
+						</table>
+            <% end %>
 
             </td>
           </tr>
@@ -101,7 +85,7 @@
         <table class="container">
           <tr>
             <td>
-              <p class="disclaimer__subtext">If you have any questions, reply to this email or contact us at <a href="mailto:{{ shop.email }}">{{ shop.email }}</a></p>
+              <p class="disclaimer__subtext" style="color: #999;line-height: 150%;font-size: 14px;margin: 0;">If you have any questions, reply to this email or contact us at <a href="mailto:orders@flourshop.com" style="font-size: 14px;text-decoration: none;color: #1990c6;">orders@flourshop.com</a></p>
             </td>
           </tr>
         </table>
@@ -110,7 +94,7 @@
   </tr>
 </table>
 
-<img src="{{ 'notifications/spacer.png' | shopify_asset_url }}" class="spacer" height="1" />
+<img src="https://cdn.shopify.com/s/assets/themes_support/notifications/spacer-1a26dfd5c56b21ac888f9f1610ef81191b571603cb207c6c0f564148473cab3c.png" class="spacer" height="1" />
 
         </td>
       </tr>
