@@ -19,7 +19,7 @@ class OrderController < ApplicationController
 		verified = verify_webhook(request.body.read, request.headers["HTTP_X_SHOPIFY_HMAC_SHA256"])
 
 		if verified
-			puts Colorize.magenta(params)
+			# puts Colorize.magenta(params)
 			order = Order.find_by_shopify_id(params['id'])
 
 			if order
@@ -33,6 +33,7 @@ class OrderController < ApplicationController
 				end
 			else
 				order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Date'}
+				shopify_order = ShopifyAPI::Order.find(params['id'])
 
 				unless order_pickup_date.nil? || order_pickup_date.count == 0
 					order_pickup_date = order_pickup_date.first["value"]
@@ -46,8 +47,6 @@ class OrderController < ApplicationController
 						puts Colorize.cyan('found PickupDate')
 					end
 
-					puts Colorize.cyan('after PickupDate')
-
 					order = Order.new
 					order.shopify_id = params['id']
 					order.email = params['email']
@@ -56,25 +55,43 @@ class OrderController < ApplicationController
 					order.order_status_url = params["order_status_url"]
 		    	order.pickup_date_id = pickup_date.id
 
-		    	puts Colorize.cyan('after order settings')
-
 		    	order_is_over_capacity = params["note_attributes"]&.select{|a| a["name"] == 'over-capacity'}
 
 		    	unless order_is_over_capacity.nil? || order_is_over_capacity.count == 0
 		    		if order_is_over_capacity.first["value"] == "true"
 		    			order.send_email = true
+						else
+			    		puts Colorize.magenta('else over_capacity false')
+		    		end
+		    	else
+		    		puts Colorize.magenta('else over_capacity is nil')
+
+		    		shopify_order.tags = shopify_order.tags.add_tag('fulfilled')
+
+		    		puts Colorize.magenta(shopify_order.tags)
+
+		    		if shopify_order.save
+		    			puts Colorize.green('added fulfilled tag') 
+		    		else
+		    			puts Colorize.red('error added fulfilled tag')
+		    		end
+
+		    		transaction = ShopifyAPI::Transaction.new
+		    		transaction.prefix_options[:order_id] = order.shopify_id
+		    		transaction.kind = 'capture'
+		    		if transaction.save
+		    			puts Colorize.green('created transaction')
+		    		else
+		    			puts Colorize.red('error creating transaction')
+		    			puts Colorize.red(transaction.errors.messages)
 		    		end
 		    	end
-
-		    	puts Colorize.cyan('after order send email')
 
 			    if order.save
 						puts Colorize.green('saved Order')
 			    else
-						puts Colorize.cyan('error occurred saving Order')
+						puts Colorize.red('error occurred saving Order')
 			    end
-
-			    puts Colorize.cyan('after save')
 
 				else
 					puts Colorize.cyan('irrelevant order')
