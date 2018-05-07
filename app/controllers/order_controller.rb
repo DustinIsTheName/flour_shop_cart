@@ -56,10 +56,26 @@ class OrderController < ApplicationController
 		    	order.pickup_date_id = pickup_date.id
 
 		    	order_is_over_capacity = params["note_attributes"]&.select{|a| a["name"] == 'over-capacity'}
+		    	order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Date'}
+		    	if order_pickup_date.nil? || order_pickup_date.count == 0
+		    		order_pickup_date = nil
+		    	else
+		    		order_pickup_date = order_pickup_date.first["value"]
+					end
 
 		    	unless order_is_over_capacity.nil? || order_is_over_capacity.count == 0
 		    		if order_is_over_capacity.first["value"] == "true"
 		    			order.send_email = true
+
+		    			if order_pickup_date
+			    			shopify_order.tags = shopify_order.tags.add_tag(order_pickup_date + '-overlimit')
+
+				    		if shopify_order.save
+				    			puts Colorize.green('added overlimit tag') 
+				    		else
+				    			puts Colorize.red('error adding overlimit tag')
+				    		end
+			    		end
 						else
 			    		puts Colorize.magenta('else over_capacity false')
 		    		end
@@ -68,12 +84,17 @@ class OrderController < ApplicationController
 
 		    		shopify_order.tags = shopify_order.tags.add_tag('fulfilled')
 
+		    		if order_pickup_date
+		    			shopify_order.tags = shopify_order.tags.add_tag(order_pickup_date + '-withinlimit')
+		    			puts Colorize.green('staged withinlimit tag')
+		    		end
+
 		    		puts Colorize.magenta(shopify_order.tags)
 
 		    		if shopify_order.save
 		    			puts Colorize.green('added fulfilled tag') 
 		    		else
-		    			puts Colorize.red('error added fulfilled tag')
+		    			puts Colorize.red('error adding fulfilled tag')
 		    		end
 
 		    		transaction = ShopifyAPI::Transaction.new
