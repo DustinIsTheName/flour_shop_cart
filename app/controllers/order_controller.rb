@@ -24,6 +24,16 @@ class OrderController < ApplicationController
 
 			if order
 				puts Colorize.green('found')
+				if params["financial_status"] == 'paid'
+					shopify_order = ShopifyAPI::Order.find(params['id'])
+					shopify_order.tags = shopify_order.tags.add_tag('fulfilled')
+
+					if shopify_order.save
+						puts Colorize.green('added fulfilled tag')
+					else
+						puts Colorize.red('error adding fulfilled tag')
+					end
+				end
 
 				if params["financial_status"] == 'paid' and order.send_email
 					puts Colorize.green('send Email')
