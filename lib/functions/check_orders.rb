@@ -36,7 +36,17 @@ class CheckOrders
 	def self.delete
 		orders = Order.all
 
+		start_time = Time.now
+
 		for order in orders
+			stop_time = Time.now
+
+			processing_duration = stop_time - start_time
+			wait_time = (0.5 - processing_duration).ceil
+			puts "We have to wait #{wait_time} seconds then we will resume."
+			sleep wait_time if wait_time > 0
+			start_time = Time.now
+
 			shopify_order = ShopifyAPI::Order.find(order.shopify_id)
 
 			if shopify_order.cancelled_at
