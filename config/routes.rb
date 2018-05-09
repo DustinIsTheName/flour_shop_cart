@@ -2,6 +2,7 @@ Rails.application.routes.draw do
 
   get '/get-info' => 'order#get_info'
   post '/save-order' => 'order#save_order'
+  post '/cancel-order' => 'order#cancel_order'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

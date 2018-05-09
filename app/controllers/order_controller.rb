@@ -133,6 +133,17 @@ class OrderController < ApplicationController
 		head :ok, content_type: "text/html"
 	end
 
+	def cancel_order
+		order = Order.find_by_shopify_id(params["id"])
+
+		if order
+			puts Colorize.red('delete order with email: ' + order.email)
+			order.destroy
+		end
+
+		head :ok, content_type: "text/html"
+	end
+
 	private
 
 		def set_headers

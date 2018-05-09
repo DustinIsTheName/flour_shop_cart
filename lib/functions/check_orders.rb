@@ -33,4 +33,19 @@ class CheckOrders
 		end
 	end
 
+	def self.delete
+		orders = Order.all
+
+		for order in orders
+			shopify_order = ShopifyAPI::Order.find(order.shopify_id)
+
+			if shopify_order.cancelled_at
+				puts Colorize.red(shopify_order.name + ', ' + shopify_order.email + ': ' + 'delete order')
+				order.destroy
+			else
+				puts Colorize.cyan('do not delete')
+			end
+		end
+	end
+
 end
