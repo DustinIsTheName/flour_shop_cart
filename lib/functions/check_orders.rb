@@ -6,6 +6,7 @@ class CheckOrders
 		for page in 1..pages
 			orders = ShopifyAPI::Order.find(:all, params: {limit: 250, page: page})
 			date_now = DateTime.now.strftime('%Y/%m/%d')
+			date_now = date_now + 1.days
 
 			for order in orders
 				if order.tags.split(', ').include? 'fulfilled'
