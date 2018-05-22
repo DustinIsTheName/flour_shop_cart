@@ -1,12 +1,13 @@
 class CheckOrders
 
-	def self.fulfill
+	def self.fulfill(number_of_days)
+		number_of_days = number_of_days.to_i
 		pages = (ShopifyAPI::Order.count/250.0).ceil
 
 		for page in 1..pages
 			orders = ShopifyAPI::Order.find(:all, params: {limit: 250, page: page})
-			date_now = DateTime.now.strftime('%Y/%m/%d')
-			date_now = date_now + 1.days
+			date_now = DateTime.now
+			date_now = (date_now + number_of_days.days).strftime('%Y/%m/%d')
 
 			for order in orders
 				if order.tags.split(', ').include? 'fulfilled'
@@ -20,6 +21,8 @@ class CheckOrders
 						f = ShopifyAPI::Fulfillment.new
 						f.prefix_options[:order_id] = order.id
 						f.notify_customer = true
+
+
 
 						if f.save
 							puts Colorize.green('saved Fulfillment')
