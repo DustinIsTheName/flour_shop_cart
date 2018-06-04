@@ -1,0 +1,104 @@
+(function() {
+
+  var loadScript = function(url, callback) {
+
+  	var script = document.createElement("script");
+		script.type = "text/javascript";
+
+	  // If the browser is Internet Explorer.
+	  if (script.readyState){
+	    script.onreadystatechange = function() {
+	      if (script.readyState == "loaded" || script.readyState == "complete"){
+	        script.onreadystatechange = null;
+	        callback();
+	      }
+	    };
+	  // For any other browser.
+	  } else {
+	    script.onload = function() {
+	      callback();
+	    };
+	  }
+
+	  script.src = url;
+	  document.getElementsByTagName("head")[0].appendChild(script);
+
+  }
+
+	/* This is my app's JavaScript */
+	var myAppJavaScript = function($) {
+
+    // gets a cookie
+    var getCookie = function(name) {
+        var nameEQ = name + "="
+        var ca = document.cookie.split(';')
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i]
+            while (c.charAt(0)==' ') c = c.substring(1,c.length)
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length)
+        }
+        return null
+    }
+		
+		if ((window.location.href.includes('thank_you') || window.location.href.includes('orders')) && getCookie('kiosk') === 'true' ) {
+			console.log('Order Status Kiosk');
+
+			// $('p.os-step__description').css({
+			// 	'background': '#7c5198', 
+			// 	'padding': '25px',
+			// 	'border-radius': '4px', 
+			// 	'font-size': '22px',
+			// 	'color': '#fff'
+			// });
+
+			$button = $('<a href="/account/logout">Return to Home page</a>');
+			$button.css({
+				'display': 'block',
+				'text-align': 'center',
+				'background': '#7c5198',
+				'color': '#fff',
+				'border-radius': '5px',
+				'padding': '10px',
+				'margin-top': '20px'
+			});
+			$('p.os-step__description').append($button);
+
+			var idleTime = 0;
+			$(document).ready(function () {
+			    //Increment the idle time counter every minute.
+			    var idleInterval = setInterval(timerIncrement, 1000); // 1 second
+
+			    //Zero the idle timer on mouse movement.
+			    $(this).mousemove(function (e) {
+			        idleTime = 0;
+			    });
+			    $(window).scroll(function (e) {
+			        idleTime = 0;
+			    });
+			});
+
+			function timerIncrement() {
+			    idleTime = idleTime + 1;
+			    console.log('idle for ' + idleTime + ' seconds');
+			    if (idleTime > 30) { // 30 seconds
+		        window.location.href = '/account/logout';
+		      }
+			}
+		} else {
+			console.log('not found');
+		}
+
+
+	}; // myAppJavaScript() ends here; ALL CUSTOM JS IS TO BE WITHIN THIS FUNCTION!
+
+    // checks for jquery, loads it if undefined.
+	if ((typeof jQuery === 'undefined') || (parseFloat(jQuery.fn.jquery) < 1.7)) {
+	  loadScript('//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js', function(){
+	    jQuery191 = jQuery.noConflict(true);
+	    myAppJavaScript(jQuery191);
+	  });
+	} else {
+	  myAppJavaScript(jQuery);
+	}
+
+})();

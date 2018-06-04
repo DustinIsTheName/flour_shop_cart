@@ -6,3 +6,7 @@ end
 task :delete_orders => :environment do |t, args|
   CheckOrders.delete
 end
+
+task :create_script => :environment do |t, args|
+  CreateScript.activate
+end

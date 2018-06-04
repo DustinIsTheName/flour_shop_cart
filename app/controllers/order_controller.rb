@@ -66,12 +66,15 @@ class OrderController < ApplicationController
 		    	order.pickup_date_id = pickup_date.id
 
 		    	order_is_over_capacity = params["note_attributes"]&.select{|a| a["name"] == 'over-capacity'}
+		    	order_is_kiosk = params["note_attributes"]&.select{|a| a["name"] == 'kiosk-purchase'}
 		    	order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Date'}
 		    	if order_pickup_date.nil? || order_pickup_date.count == 0
 		    		order_pickup_date = nil
 		    	else
 		    		order_pickup_date = order_pickup_date.first["value"]
 					end
+
+					puts Colorize.black(order_is_kiosk)
 
 		    	unless order_is_over_capacity.nil? || order_is_over_capacity.count == 0
 		    		if order_is_over_capacity.first["value"] == "true"
@@ -92,7 +95,10 @@ class OrderController < ApplicationController
 		    	else
 		    		puts Colorize.magenta('else over_capacity is nil')
 
-		    		shopify_order.tags = shopify_order.tags.add_tag('fulfilled')
+		    		if order_is_kiosk.nil? || order_is_kiosk.count == 0
+			    		shopify_order.tags = shopify_order.tags.add_tag('fulfilled')
+			    		puts Colorize.green('staged fulfilled tag')
+			    	end
 
 		    		if order_pickup_date
 		    			shopify_order.tags = shopify_order.tags.add_tag(order_pickup_date + '-withinlimit')
@@ -107,15 +113,17 @@ class OrderController < ApplicationController
 		    			puts Colorize.red('error adding fulfilled tag')
 		    		end
 
-		    		transaction = ShopifyAPI::Transaction.new
-		    		transaction.prefix_options[:order_id] = order.shopify_id
-		    		transaction.kind = 'capture'
-		    		if transaction.save
-		    			puts Colorize.green('created transaction')
-		    		else
-		    			puts Colorize.red('error creating transaction')
-		    			puts Colorize.red(transaction.errors.messages)
-		    		end
+		    		if order_is_kiosk.nil? || order_is_kiosk.count == 0
+			    		transaction = ShopifyAPI::Transaction.new
+			    		transaction.prefix_options[:order_id] = order.shopify_id
+			    		transaction.kind = 'capture'
+			    		if transaction.save
+			    			puts Colorize.green('created transaction')
+			    		else
+			    			puts Colorize.red('error creating transaction')
+			    			puts Colorize.red(transaction.errors.messages)
+			    		end
+			    	end
 		    	end
 
 			    if order.save
@@ -142,6 +150,38 @@ class OrderController < ApplicationController
 		end
 
 		head :ok, content_type: "text/html"
+	end
+
+	def kiosk_order
+		puts Colorize.magenta(params)
+
+		note_attributes = []
+
+		for attr in params["attributes"]
+			note_attributes << {name: attr.first, value: attr.last}
+		end
+
+		note_attributes << {name: "kiosk-purchase", value: "true"}
+
+		order = ShopifyAPI::Order.new
+		order.email = params["kiosk_email"]
+		order.customer = {
+			first_name: params["kiosk_first_name"],
+			last_name: params["kiosk_last_name"]
+		}
+		order.line_items = params["line_items"]
+		order.note_attributes = note_attributes
+		order.financial_status = 'pending'
+
+		if order.save
+			puts Colorize.green('saved order')
+			render json: order
+		else
+			puts Colorize.red('error saving order')
+			render json: order.errors
+		end
+
+		# render json: order
 	end
 
 	private

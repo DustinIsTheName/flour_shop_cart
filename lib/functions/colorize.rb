@@ -5,10 +5,10 @@ class Colorize
 	end
 
 	def self.red(text)
-	 self.colorize(text, "\e[31m")
+		self.colorize(text, "\e[31m")
 	end
 	def self.green(text)
-	 self.colorize(text, "\e[32m") 
+		self.colorize(text, "\e[32m") 
 	end
 	def self.black(text)
 		self.colorize(text, "\e[30m\e[47m")
