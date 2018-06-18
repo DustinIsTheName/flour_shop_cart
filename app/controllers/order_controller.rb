@@ -171,7 +171,7 @@ class OrderController < ApplicationController
 		}
 		order.line_items = params["line_items"]
 		order.note_attributes = note_attributes
-		order.financial_status = 'authorized'
+		order.financial_status = 'partially_paid'
 
 		if order.save
 			puts Colorize.green('saved order')
