@@ -35,7 +35,7 @@ class OrderController < ApplicationController
 					end
 				end
 
-				if params["financial_status"] == 'paid' and order.send_email
+				if params["financial_status"] == 'paid' and order.send_email and !params["cancelled_at"]
 					puts Colorize.green('send Email')
 					order.send_email = false
 					order.save
@@ -171,7 +171,6 @@ class OrderController < ApplicationController
 		}
 		order.line_items = params["line_items"]
 		order.note_attributes = note_attributes
-		order.financial_status = 'pending'
 
 		if order.save
 			puts Colorize.green('saved order')
