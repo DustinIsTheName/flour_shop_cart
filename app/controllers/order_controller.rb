@@ -6,7 +6,7 @@ class OrderController < ApplicationController
 	def get_info
 		puts Colorize.magenta(params)
 
-		pickup_date = PickupDate.find_by_date(params["date"])
+		pickup_date = PickupDate.find_by(date: params["date"], location: params["location"])
 
 		if pickup_date
 			render json: {orders_for_the_day: pickup_date.orders.count}
@@ -43,19 +43,32 @@ class OrderController < ApplicationController
 				end
 			else
 				order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Date'}
+				order_pickup_location = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Location-Id'}
+
+				unless order_pickup_date
+					order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Delivery-Date'}
+				end
+
+				unless order_pickup_location
+					order_pickup_location = params["note_attributes"]&.select{|a| a["name"] == 'Delivery-Location-Id'}
+				end
+
 				shopify_order = ShopifyAPI::Order.find(params['id'])
 
 				unless order_pickup_date.nil? || order_pickup_date.count == 0
 					order_pickup_date = order_pickup_date.first["value"]
+					order_pickup_location = order_pickup_location.first["value"]
 
-					pickup_date = PickupDate.find_by_date(order_pickup_date)
+					pickup_date = PickupDate.find_by(date: order_pickup_date, location: order_pickup_location)
 
 					unless pickup_date
 						puts Colorize.magenta('creating PickupDate')
-						pickup_date = PickupDate.create({date: order_pickup_date})
+						pickup_date = PickupDate.create({date: order_pickup_date, location: order_pickup_location})
 					else
 						puts Colorize.cyan('found PickupDate')
 					end
+
+					pickup_date
 
 					order = Order.new
 					order.shopify_id = params['id']
