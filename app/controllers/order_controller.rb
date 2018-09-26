@@ -55,6 +55,8 @@ class OrderController < ApplicationController
 
 				shopify_order = ShopifyAPI::Order.find(params['id'])
 
+        puts Colorize.orange(shopify_order.attributes)
+
 				unless order_pickup_date.nil? || order_pickup_date.count == 0
 					order_pickup_date = order_pickup_date.first["value"]
 					order_pickup_location = order_pickup_location.first["value"]
@@ -103,7 +105,7 @@ class OrderController < ApplicationController
 					    			puts Colorize.red('error adding overlimit tag')
 					    		end
 				    		end
-							else
+  						else
 				    		puts Colorize.magenta('else over_capacity false')
 			    		end
 			    	else
@@ -139,15 +141,15 @@ class OrderController < ApplicationController
 					    			puts Colorize.red(transaction.errors.messages)
 					    		end
 					    	else
-									puts Colorize.yellow('Edited Order, don\'t create transaction')
+								puts Colorize.yellow('Edited Order, don\'t create transaction')
 					    	end
 				    	end
 			    	end
 
 				    if order.save
-							puts Colorize.green('saved Order')
+						puts Colorize.green('saved Order')
 				    else
-							puts Colorize.red('error occurred saving Order')
+						puts Colorize.red('error occurred saving Order')
 				    end
 
 				else
