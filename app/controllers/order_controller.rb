@@ -45,17 +45,18 @@ class OrderController < ApplicationController
 				order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Date'}
 				order_pickup_location = params["note_attributes"]&.select{|a| a["name"] == 'Pickup-Location-Id'}
 
-				unless order_pickup_date
+				if order_pickup_date.nil? || order_pickup_date.count == 0
 					order_pickup_date = params["note_attributes"]&.select{|a| a["name"] == 'Delivery-Date'}
 				end
 
-				unless order_pickup_location
+				if order_pickup_location.nil? || order_pickup_location.count == 0
 					order_pickup_location = params["note_attributes"]&.select{|a| a["name"] == 'Delivery-Location-Id'}
 				end
 
 				shopify_order = ShopifyAPI::Order.find(params['id'])
 
-        puts Colorize.orange(shopify_order.attributes)
+        puts Colorize.orange(order_pickup_date)
+        puts Colorize.orange(order_pickup_location)
 
 				unless order_pickup_date.nil? || order_pickup_date.count == 0
 					order_pickup_date = order_pickup_date.first["value"]
