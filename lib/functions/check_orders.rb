@@ -21,6 +21,7 @@ class CheckOrders
 						f = ShopifyAPI::Fulfillment.new
 						f.prefix_options[:order_id] = order.id
 						f.notify_customer = true
+            f.location_id = order.location_id
 
 
 
