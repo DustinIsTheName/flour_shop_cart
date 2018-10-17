@@ -11,7 +11,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180820202846) do
+ActiveRecord::Schema.define(version: 20181017132501) do
+
+  create_table "market_man_orders", force: :cascade do |t|
+    t.string   "name"
+    t.string   "order_id"
+    t.string   "price"
+    t.string   "sku"
+    t.integer  "quantity"
+    t.string   "date_utc"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "market_men", force: :cascade do |t|
+    t.string   "auth_token"
+    t.string   "expiration"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "orders", force: :cascade do |t|
     t.integer  "shopify_id",       limit: 8

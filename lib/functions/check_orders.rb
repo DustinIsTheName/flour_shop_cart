@@ -40,6 +40,53 @@ class CheckOrders
 				end
 			end
 		end
+
+    market_man = MarketMan.first
+    market_man_orders = MarketManOrder.all
+    
+    items = []
+    transactions = []
+
+    for order in market_man_orders
+
+      items << {
+        "Type" => "MenuItem",
+        "Name" => order.name,
+        "ID" => order.order_id,
+        "PriceWithVAT" => order.price,
+        "PriceWithoutVAT" => order.price,
+        "SKU" => order.sku,
+        "Category" => ""
+      }
+
+      transactions << {
+        "ItemCode" => order.sku,
+        "ItemID" => order.order_id,
+        "ItemName" => order.name,
+        "PriceTotalWithVAT" => order.price.to_f * order.quantity,
+        "PriceTotalWithoutVAT" => order.price.to_f * order.quantity,
+        "DateUTC" => order.date_utc,
+        "Quantity" => order.quantity
+      }
+
+    end
+
+    sales_params = {
+      "UniqueID" => Time.now.strftime('%Y%m%d'),
+      "FromDateUTC"  => Time.now.strftime('%Y/%m/%d 00:00:00'),
+      "ToDateUTC" => Time.now.strftime('%Y/%m/%d 23:59:59'),
+      "TotalPriceWithVAT" => transactions.map{|t| t["PriceTotalWithVAT"]}.inject(0){|sum,x| sum + x },
+      "TotalPriceWithoutVAT" => transactions.map{|t| t["PriceTotalWithoutVAT"]}.inject(0){|sum,x| sum + x },
+      "Items" => items,
+      "Transactions" => transactions
+    }
+
+    url = URI('https://api.marketman.com/v2/buyers/sales/SetSales')
+    sale = marketman_http_request(url, market_man.auth_token, sales_params, 'post')
+
+    MarketManOrder.destroy_all
+
+    puts sale
 	end
 
 	def self.delete
@@ -66,5 +113,39 @@ class CheckOrders
 			end
 		end
 	end
+
+  def self.marketman_http_request(url, token = nil, body = nil, type = nil)
+    http = Net::HTTP.new(url.host, url.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    if type == "delete"
+      request = Net::HTTP::Delete.new(url)
+    elsif type == "post"
+      request = Net::HTTP::Post.new(url)
+    elsif type == "put"
+      request = Net::HTTP::Put.new(url)
+    elsif type == "get"
+      request = Net::HTTP::Get.new(url)
+    else
+      request = Net::HTTP::Get.new(url)
+    end
+
+    if token
+      request["AUTH_TOKEN"] = token
+    end
+    request["content-type"] = 'application/json'
+
+    if body
+      request.body = body.to_json
+    end
+
+    response = http.request(request)
+
+    puts Colorize.yellow(request.body)
+    puts Colorize.yellow(response.code)
+
+    JSON.parse response.read_body
+  end
 
 end

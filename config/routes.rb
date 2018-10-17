@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
 
   get '/get-info' => 'order#get_info'
+  post '/send-marketman' => 'api#send_marketman'
   post '/save-order' => 'order#save_order'
   post '/cancel-order' => 'order#cancel_order'
   post '/kiosk-order' => 'order#kiosk_order'
