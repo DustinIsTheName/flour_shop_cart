@@ -40,7 +40,34 @@ class CheckOrders
 				end
 			end
 		end
+	end
 
+	def self.delete
+		orders = Order.all
+
+		start_time = Time.now
+
+		for order in orders
+			stop_time = Time.now
+
+			processing_duration = stop_time - start_time
+			wait_time = (0.5 - processing_duration).ceil
+			puts "We have to wait #{wait_time} seconds then we will resume."
+			sleep wait_time if wait_time > 0
+			start_time = Time.now
+
+			shopify_order = ShopifyAPI::Order.find(order.shopify_id)
+
+			if shopify_order.cancelled_at
+				puts Colorize.red(shopify_order.name + ', ' + shopify_order.email + ': ' + 'delete order')
+				order.destroy
+			else
+				puts Colorize.cyan('do not delete')
+			end
+		end
+	end
+
+  def self.fulfill_marketman
     market_man = MarketMan.first
     market_man_orders = MarketManOrder.all
     
@@ -87,32 +114,7 @@ class CheckOrders
     MarketManOrder.destroy_all
 
     puts sale
-	end
-
-	def self.delete
-		orders = Order.all
-
-		start_time = Time.now
-
-		for order in orders
-			stop_time = Time.now
-
-			processing_duration = stop_time - start_time
-			wait_time = (0.5 - processing_duration).ceil
-			puts "We have to wait #{wait_time} seconds then we will resume."
-			sleep wait_time if wait_time > 0
-			start_time = Time.now
-
-			shopify_order = ShopifyAPI::Order.find(order.shopify_id)
-
-			if shopify_order.cancelled_at
-				puts Colorize.red(shopify_order.name + ', ' + shopify_order.email + ': ' + 'delete order')
-				order.destroy
-			else
-				puts Colorize.cyan('do not delete')
-			end
-		end
-	end
+  end
 
   def self.marketman_http_request(url, token = nil, body = nil, type = nil)
     http = Net::HTTP.new(url.host, url.port)
