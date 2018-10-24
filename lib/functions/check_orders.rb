@@ -11,10 +11,16 @@ class CheckOrders
 
 			for order in orders
 				if order.tags.split(', ').include? 'fulfilled'
-					puts Colorize.cyan(date_now)
-					puts Colorize.magenta(order.note_attributes&.select{|a| a.name == 'Pickup-Date'}&.first&.value)
+          order_date = order.note_attributes&.select{|a| a.name == 'Pickup-Date'}&.first&.value
 
-					if order.note_attributes&.select{|a| a.name == 'Pickup-Date'}&.first&.value == date_now
+          unless order_date
+            order_date = order.note_attributes&.select{|a| a.name == 'Delivery-Date'}&.first&.value
+          end
+
+					puts Colorize.cyan(date_now)
+					puts Colorize.magenta(order_date)
+
+					if order_date == date_now
 						puts order.name
 						order.tags = order.tags.remove_tag 'fulfilled'
 						

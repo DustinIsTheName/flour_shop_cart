@@ -53,32 +53,35 @@ class OrderController < ApplicationController
 					order_pickup_location = params["note_attributes"]&.select{|a| a["name"] == 'Delivery-Location-Id'}
 				end
 
-				shopify_order = ShopifyAPI::Order.find(params['id'])
+        begin
+  				shopify_order = ShopifyAPI::Order.find(params['id'])
+        rescue => e
+          puts Colorize.red('Order not found')
+        end
 
         puts Colorize.orange(order_pickup_date)
         puts Colorize.orange(order_pickup_location)
 
-				unless order_pickup_date.nil? || order_pickup_date.count == 0
-					order_pickup_date = order_pickup_date.first["value"]
-					order_pickup_location = order_pickup_location.first["value"]
+        if shopify_order
+  				unless order_pickup_date.nil? || order_pickup_date.count == 0
+  					order_pickup_date = order_pickup_date.first["value"]
+  					order_pickup_location = order_pickup_location.first["value"]
 
-					pickup_date = PickupDate.find_by(date: order_pickup_date, location: order_pickup_location)
+  					pickup_date = PickupDate.find_by(date: order_pickup_date, location: order_pickup_location)
 
-					unless pickup_date
-						puts Colorize.magenta('creating PickupDate')
-						pickup_date = PickupDate.create({date: order_pickup_date, location: order_pickup_location})
-					else
-						puts Colorize.cyan('found PickupDate')
-					end
+  					unless pickup_date
+  						puts Colorize.magenta('creating PickupDate')
+  						pickup_date = PickupDate.create({date: order_pickup_date, location: order_pickup_location})
+  					else
+  						puts Colorize.cyan('found PickupDate')
+  					end
 
-					pickup_date
-
-					order = Order.new
-					order.shopify_id = params['id']
-					order.email = params['email']
-					order.customer_name = params["customer"]["first_name"]
-					order.number = params["name"]
-					order.order_status_url = params["order_status_url"]
+  					order = Order.new
+  					order.shopify_id = params['id']
+  					order.email = params['email']
+  					order.customer_name = params["customer"]["first_name"]
+  					order.number = params["name"]
+  					order.order_status_url = params["order_status_url"]
 			    	order.pickup_date_id = pickup_date.id
 
 			    	order_is_over_capacity = params["note_attributes"]&.select{|a| a["name"] == 'over-capacity'}
@@ -89,73 +92,74 @@ class OrderController < ApplicationController
 			    		order_pickup_date = nil
 			    	else
 			    		order_pickup_date = order_pickup_date.first["value"]
-					end
+  					end
 
-					puts Colorize.black(order_is_kiosk)
+  					puts Colorize.black(order_is_kiosk)
 
-			    	unless order_is_over_capacity.nil? || order_is_over_capacity.count == 0
-			    		if order_is_over_capacity.first["value"] == "true"
-			    			order.send_email = true
+  			    	unless order_is_over_capacity.nil? || order_is_over_capacity.count == 0
+  			    		if order_is_over_capacity.first["value"] == "true"
+  			    			order.send_email = true
 
-			    			if order_pickup_date
-				    			shopify_order.tags = shopify_order.tags.add_tag(order_pickup_date + '-overlimit')
+  			    			if order_pickup_date
+  				    			shopify_order.tags = shopify_order.tags.add_tag(order_pickup_date + '-overlimit')
 
-					    		if shopify_order.save
-					    			puts Colorize.green('added overlimit tag') 
-					    		else
-					    			puts Colorize.red('error adding overlimit tag')
-					    		end
-				    		end
-  						else
-				    		puts Colorize.magenta('else over_capacity false')
-			    		end
-			    	else
-			    		puts Colorize.magenta('else over_capacity is nil')
+  					    		if shopify_order.save
+  					    			puts Colorize.green('added overlimit tag') 
+  					    		else
+  					    			puts Colorize.red('error adding overlimit tag')
+  					    		end
+  				    		end
+    						else
+  				    		puts Colorize.magenta('else over_capacity false')
+  			    		end
+  			    	else
+  			    		puts Colorize.magenta('else over_capacity is nil')
 
-			    		if order_is_kiosk.nil? || order_is_kiosk.count == 0
-				    		shopify_order.tags = shopify_order.tags.add_tag('fulfilled')
-				    		puts Colorize.green('staged fulfilled tag')
-				    	end
+  			    		if order_is_kiosk.nil? || order_is_kiosk.count == 0
+  				    		shopify_order.tags = shopify_order.tags.add_tag('fulfilled')
+  				    		puts Colorize.green('staged fulfilled tag')
+  				    	end
 
-			    		if order_pickup_date
-			    			shopify_order.tags = shopify_order.tags.add_tag(order_pickup_date + '-withinlimit')
-			    			puts Colorize.green('staged withinlimit tag')
-			    		end
+  			    		if order_pickup_date
+  			    			shopify_order.tags = shopify_order.tags.add_tag(order_pickup_date + '-withinlimit')
+  			    			puts Colorize.green('staged withinlimit tag')
+  			    		end
 
-			    		puts Colorize.magenta(shopify_order.tags)
+  			    		puts Colorize.magenta(shopify_order.tags)
 
-			    		if shopify_order.save
-			    			puts Colorize.green('added fulfilled tag') 
-			    		else
-			    			puts Colorize.red('error adding fulfilled tag')
-			    		end
+  			    		if shopify_order.save
+  			    			puts Colorize.green('added fulfilled tag') 
+  			    		else
+  			    			puts Colorize.red('error adding fulfilled tag')
+  			    		end
 
-			    		if order_is_kiosk.nil? || order_is_kiosk.count == 0
-			    			unless shopify_order.tags.split(', ').include? 'Edit Order'
-					    		transaction = ShopifyAPI::Transaction.new
-					    		transaction.prefix_options[:order_id] = order.shopify_id
-					    		transaction.kind = 'capture'
-					    		if transaction.save
-					    			puts Colorize.green('created transaction')
-					    		else
-					    			puts Colorize.red('error creating transaction')
-					    			puts Colorize.red(transaction.errors.messages)
-					    		end
-					    	else
-								puts Colorize.yellow('Edited Order, don\'t create transaction')
-					    	end
-				    	end
-			    	end
+  			    		if order_is_kiosk.nil? || order_is_kiosk.count == 0
+  			    			unless shopify_order.tags.split(', ').include? 'Edit Order'
+  					    		transaction = ShopifyAPI::Transaction.new
+  					    		transaction.prefix_options[:order_id] = order.shopify_id
+  					    		transaction.kind = 'capture'
+  					    		if transaction.save
+  					    			puts Colorize.green('created transaction')
+  					    		else
+  					    			puts Colorize.red('error creating transaction')
+  					    			puts Colorize.red(transaction.errors.messages)
+  					    		end
+  					    	else
+  								puts Colorize.yellow('Edited Order, don\'t create transaction')
+  					    	end
+  				    	end
+  			    	end
 
-				    if order.save
-						puts Colorize.green('saved Order')
-				    else
-						puts Colorize.red('error occurred saving Order')
-				    end
+  				    if order.save
+  						puts Colorize.green('saved Order')
+  				    else
+  						puts Colorize.red('error occurred saving Order')
+  				    end
 
-				else
-					puts Colorize.cyan('irrelevant order')
-				end
+  				else
+  					puts Colorize.cyan('irrelevant order')
+  				end
+        end
 			end
 		end
 
