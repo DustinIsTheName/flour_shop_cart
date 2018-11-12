@@ -6,10 +6,15 @@ class CheckOrders
 
 		for page in 1..pages
 			orders = ShopifyAPI::Order.find(:all, params: {limit: 250, page: page})
-			date_now = DateTime.now
-			date_now = (date_now + number_of_days.days).strftime('%Y/%m/%d')
+			date_now_p = DateTime.now
+			date_now = (date_now_p + number_of_days.days).strftime('%Y/%m/%d')
+      date_now_dash = (date_now_p + number_of_days.days).strftime('%Y-%m-%d')
 
 			for order in orders
+        if order.name == "#15820"
+          Colorize.green(order.name)
+        end
+        
 				if order.tags.split(', ').include? 'fulfilled'
           order_date = order.note_attributes&.select{|a| a.name == 'Pickup-Date'}&.first&.value
 
@@ -20,8 +25,8 @@ class CheckOrders
 					puts Colorize.cyan(date_now)
 					puts Colorize.magenta(order_date)
 
-					if order_date == date_now
-						puts order.name
+					if order_date == date_now or order_date == date_now_dash
+						puts Colorize.blue(order.name)
 						order.tags = order.tags.remove_tag 'fulfilled'
 						
 						f = ShopifyAPI::Fulfillment.new
