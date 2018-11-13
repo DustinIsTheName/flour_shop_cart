@@ -28,11 +28,19 @@ class CheckOrders
 					if order_date == date_now or order_date == date_now_dash
 						puts Colorize.blue(order.name)
 						order.tags = order.tags.remove_tag 'fulfilled'
-						
+
+						inventory_item_id = ShopifyAPI::Variant.find(order.line_items.first.variant_id).inventory_item_id
+
+            url = URI("https://"+ENV["SHOPIFY_DOMAIN"]+"/admin/inventory_levels.json?inventory_item_ids="+inventory_item_id.to_s)
+
+            response = http_request url
+
 						f = ShopifyAPI::Fulfillment.new
 						f.prefix_options[:order_id] = order.id
 						f.notify_customer = true
-            f.location_id = order.location_id
+            f.location_id = response["inventory_levels"].first["location_id"]
+
+            puts Colorize.yellow(response["inventory_levels"].first["location_id"])
 
 
 
@@ -147,6 +155,38 @@ class CheckOrders
     if token
       request["AUTH_TOKEN"] = token
     end
+    request["content-type"] = 'application/json'
+
+    if body
+      request.body = body.to_json
+    end
+
+    response = http.request(request)
+
+    puts Colorize.yellow(request.body)
+    puts Colorize.yellow(response.code)
+
+    JSON.parse response.read_body
+  end
+
+  def self.http_request(url, body = nil, type = nil)
+    http = Net::HTTP.new(url.host, url.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    if type == "delete"
+      request = Net::HTTP::Delete.new(url)
+    elsif type == "post"
+      request = Net::HTTP::Post.new(url)
+    elsif type == "put"
+      request = Net::HTTP::Put.new(url)
+    elsif type == "get"
+      request = Net::HTTP::Get.new(url)
+    else
+      request = Net::HTTP::Get.new(url)
+    end
+
+    request["Authorization"] = 'Basic ' + Base64.strict_encode64(ENV['API_KEY'] + ':' + ENV['PASSWORD'])
     request["content-type"] = 'application/json'
 
     if body
