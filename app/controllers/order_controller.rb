@@ -22,7 +22,7 @@ class OrderController < ApplicationController
     verified = verify_webhook(request.body.read, request.headers["HTTP_X_SHOPIFY_HMAC_SHA256"])
 
     if verified
-      CheckOrders.save_order(params)
+      CheckOrders.delay.save_order(params)
     end
 
 		head :ok, content_type: "text/html"
