@@ -29,20 +29,24 @@ class CheckOrders
 						puts Colorize.blue(order.name)
 						order.tags = order.tags.remove_tag 'fulfilled'
 
-						inventory_item_id = ShopifyAPI::Variant.find(order.line_items.first.variant_id).inventory_item_id
+            begin
+              inventory_item_id = ShopifyAPI::Variant.find(order.line_items.first.variant_id).inventory_item_id
+            rescue
+              puts Colorize.red("couldn't find Variant")
+            end
 
-            url = URI("https://"+ENV["SHOPIFY_DOMAIN"]+"/admin/inventory_levels.json?inventory_item_ids="+inventory_item_id.to_s)
+            if inventory_item_id
+              url = URI("https://"+ENV["SHOPIFY_DOMAIN"]+"/admin/inventory_levels.json?inventory_item_ids="+inventory_item_id.to_s)
 
-            response = http_request url
+              response = http_request url
 
-						f = ShopifyAPI::Fulfillment.new
-						f.prefix_options[:order_id] = order.id
-						f.notify_customer = true
-            f.location_id = response["inventory_levels"].first["location_id"]
+  						f = ShopifyAPI::Fulfillment.new
+  						f.prefix_options[:order_id] = order.id
+  						f.notify_customer = true
+              f.location_id = response["inventory_levels"].first["location_id"]
 
-            puts Colorize.yellow(response["inventory_levels"].first["location_id"])
-
-
+              puts Colorize.yellow(response["inventory_levels"].first["location_id"])
+            end 
 
 						if f.save
 							puts Colorize.green('saved Fulfillment')
